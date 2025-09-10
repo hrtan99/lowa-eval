@@ -1,2 +1,5 @@
 .DS_Store
 **/.DS_Store
+
+POJ104/Program/**
+!POJ104/Program/**/*.txt
