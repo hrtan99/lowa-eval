@@ -2,6 +2,7 @@
 import os
 import re
 import csv
+import subprocess
 
 # Directory to be analyzed
 CODE_ROOT = os.path.join(os.path.dirname(__file__), 'program_c')
@@ -37,15 +38,16 @@ def count_lines(code):
     # Count total lines in the file
     return len(code.splitlines())
 
-def count_functions(code):
-    # More accurately count all function definitions (including main)
-    # Exclude lines starting with typedef, struct, enum, #
-    pattern = re.compile(
-        r'^[ \t]*(?!typedef|struct|enum|#)[a-zA-Z_][\w\s\*\(\)]*[ \t]+([a-zA-Z_]\w*)[ \t]*\([^;{]*\)[ \t]*\{',
-        re.MULTILINE
-    )
-    matches = pattern.findall(code)
-    return len(matches)
+def count_functions(filepath):
+    # Use ctags to count functions in the file
+    try:
+        result = subprocess.run([
+            'ctags', '--c-kinds=f', '-x', filepath
+        ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8', check=True)
+        lines = result.stdout.strip().splitlines()
+        return len(lines)
+    except Exception:
+        return -1
 
 def stat_file(filepath):
     with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
@@ -59,7 +61,7 @@ def stat_file(filepath):
         'has_scanf': has_scanf(code),
         'has_printf': has_printf(code),
         'line_count': count_lines(code),
-        'function_count': count_functions(code),
+        'function_count': count_functions(filepath),
     }
 
 def main():
@@ -77,7 +79,9 @@ def main():
         total = len(all_files)
 
     for idx, filepath in enumerate(all_files, 1):
-        print(f"Processing {idx}/{total}: {os.path.relpath(filepath, CODE_ROOT)}", end='\r')
+        if idx % 100 == 0 or idx == total:
+            percent = 100.0 * idx / total if total else 100.0
+            print(f"Processing {idx}/{total} ({percent:.2f}%): {os.path.relpath(filepath, CODE_ROOT)}", end='\r')
         info = stat_file(filepath)
         results.append(info)
     print()  # Newline after progress
