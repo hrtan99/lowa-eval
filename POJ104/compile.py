@@ -24,6 +24,7 @@ def process_dir(home):
     wasi_clang_path = "/opt/wasi-sdk/bin/clang"
     clang_compile_host_cmd = clang_path + " {} -w -o {} -lm"
     clang_compile_wasm_cmd = wasi_clang_path + " {} -w -o {} -lm -v"
+    clang_compile_wasm_obj_cmd = wasi_clang_path + " {} -w -c -o {} -v"
 
     file_count = 0
     success = 0
