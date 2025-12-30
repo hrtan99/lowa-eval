@@ -36,20 +36,23 @@ def compile_single_program(program, output_dir):
     results = []
 
     for opt in optimization_levels:
-        basename = os.path.splitext(os.path.basename(program))[0]
-        ll_output_path = os.path.join(output_dir, f"{basename}.{opt}.ll")
+        relative_path = os.path.relpath(program, "program_c")
+        out_base = os.path.splitext(relative_path)[0]
+        ll_output_path = os.path.join(output_dir, f"{out_base}.{opt}.ll")
+        os.makedirs(os.path.dirname(ll_output_path), exist_ok=True)
         ll_compile_cmd = f"{wasi_clang_path} -S -emit-llvm {program} -w -o {ll_output_path} -O{opt}"
         ll_status, ll_output = subprocess.getstatusoutput(ll_compile_cmd)
         results.append((program, f".{opt}.ll", ll_compile_cmd, ll_status, ll_output))
 
-        wasm_output_path = os.path.join(output_dir, f"{basename}.{opt}.wasm")
+        wasm_output_path = os.path.join(output_dir, f"{out_base}.{opt}.wasm")
+        os.makedirs(os.path.dirname(wasm_output_path), exist_ok=True)
         wasm_compile_cmd = f"{wasi_clang_path} {program} -w -o {wasm_output_path} -O{opt}"
         wasm_status, wasm_output = subprocess.getstatusoutput(wasm_compile_cmd)
         results.append((program, f".{opt}.wasm", wasm_compile_cmd, wasm_status, wasm_output))
 
     return results
 
-def compile_programs_parallel(program_list_path=None, max_workers=None, result_file="compile_results.csv"):
+def compile_programs_parallel(program_list_path=None, max_workers=None, result_file="poj104_compile_stats.csv"):
     """
     Compile C programs in parallel with multiple optimization levels and store results.
 
@@ -112,7 +115,7 @@ def compile_programs_parallel(program_list_path=None, max_workers=None, result_f
                 h = int(remaining_time // 3600)
                 m = int((remaining_time % 3600) // 60)
                 s = int(remaining_time % 60)
-                print(f"Progress: {completed}/{total} programs compiled ({percentage:.2f}%) - Estimated time remaining: {h}h {m}m {s}s ", end="\r")
+                print(f"Progress: {completed}/{total} ({percentage:.2f}%) - Estimated time remaining: {h}h {m}m {s}s ", end="\r")
 
     print()  # Move to the next line after progress display
 
@@ -142,9 +145,12 @@ def compile_programs_parallel(program_list_path=None, max_workers=None, result_f
     print(f"    Targets={len(targets)*total}, Success={success_targets}, Error={error_targets}")
 
 if __name__ == "__main__":
-    compile_programs_parallel()
-    # program_list_file = "check_program_list.txt"  # Change this to the desired file path if needed
-    # compile_programs_parallel(program_list_file)
+    ### compile all programs
+    # compile_programs_parallel()
+
+    ### complie specified list of programs
+    program_list_file = "check_program_list.txt"
+    compile_programs_parallel(program_list_file)
 
     # rootdir = "Program"
     # dirs = [home for home, _, _ in os.walk(rootdir)]
