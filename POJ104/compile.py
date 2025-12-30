@@ -50,6 +50,12 @@ def compile_single_program(program, output_dir):
         wasm_status, wasm_output = subprocess.getstatusoutput(wasm_compile_cmd)
         results.append((program, f".{opt}.wasm", wasm_compile_cmd, wasm_status, wasm_output))
 
+        wat_output_path = os.path.join(output_dir, f"{out_base}.{opt}.wat")
+        if wasm_status == 0:
+            wasm2wat_cmd = f"wasm2wat {wasm_output_path} -o {wat_output_path}"
+            wat_status, wat_output = subprocess.getstatusoutput(wasm2wat_cmd)
+            # results.append((program, f".{opt}.wat", wasm2wat_cmd, wat_status, wat_output))
+
     return results
 
 def compile_programs_parallel(program_list_path=None, max_workers=None, result_file="poj104_compile_stats.csv"):
