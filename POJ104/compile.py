@@ -3,6 +3,7 @@ import subprocess
 import os
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import csv
+import time
 
 class cd:
     def __init__(self, newPath):
@@ -70,17 +71,19 @@ def compile_programs_parallel(program_list_path=None, max_workers=None, result_f
     results = []
 
     # Compile programs in parallel with progress display
-    total_programs = len(programs)
-    completed_programs = 0
+    total = len(programs)
+    completed = 0
     success_programs = 0
     error_programs = 0
     success_targets = 0
     error_targets = 0
 
+    start_time = time.time()  # Track start time
+
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
         futures = {executor.submit(compile_single_program, program, output_dir): program for program in programs}
         for future in as_completed(futures):
-            completed_programs += 1
+            completed += 1
             result = future.result()
             results.extend(result)
 
@@ -98,8 +101,18 @@ def compile_programs_parallel(program_list_path=None, max_workers=None, result_f
             else:
                 error_programs += 1
 
-            # Display progress
-            print(f"Progress: {completed_programs}/{total_programs} programs compiled", end="\r")
+            # Display progress with percentage, estimated time, and update every 10 programs
+            if completed % 10 == 0 or completed == total:
+                percentage = (completed / total) * 100
+                elapsed_time = time.time() - start_time
+                estimated_total_time = (elapsed_time / completed) * total if completed > 0 else 0
+                remaining_time = estimated_total_time - elapsed_time
+
+                # Convert remaining time to hours, minutes, and seconds
+                h = int(remaining_time // 3600)
+                m = int((remaining_time % 3600) // 60)
+                s = int(remaining_time % 60)
+                print(f"Progress: {completed}/{total} programs compiled ({percentage:.2f}%) - Estimated time remaining: {h}h {m}m {s}s ", end="\r")
 
     print()  # Move to the next line after progress display
 
@@ -125,12 +138,13 @@ def compile_programs_parallel(program_list_path=None, max_workers=None, result_f
 
     print(f"Compilation results saved to {result_file}")
     print(f"Summary:")
-    print(f"    Programs={total_programs}, Success={success_programs}, Error={error_programs}")
-    print(f"    Targets={len(targets)*total_programs}, Success={success_targets}, Error={error_targets}")
+    print(f"    Programs={total}, Success={success_programs}, Error={error_programs}")
+    print(f"    Targets={len(targets)*total}, Success={success_targets}, Error={error_targets}")
 
 if __name__ == "__main__":
-    program_list_file = "check_program_list.txt"  # Change this to the desired file path if needed
-    compile_programs_parallel(program_list_file)
+    compile_programs_parallel()
+    # program_list_file = "check_program_list.txt"  # Change this to the desired file path if needed
+    # compile_programs_parallel(program_list_file)
 
     # rootdir = "Program"
     # dirs = [home for home, _, _ in os.walk(rootdir)]
