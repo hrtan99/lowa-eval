@@ -42,13 +42,13 @@ def compile_single_program(program, output_dir):
         os.makedirs(os.path.dirname(ll_output_path), exist_ok=True)
         ll_compile_cmd = f"{wasi_clang_path} -S -emit-llvm {program} -w -o {ll_output_path} -O{opt}"
         ll_status, ll_output = subprocess.getstatusoutput(ll_compile_cmd)
-        results.append((program, f".{opt}.ll", ll_compile_cmd, ll_status, ll_output))
+        results.append((relative_path, f".{opt}.ll", ll_compile_cmd, ll_status, ll_output))
 
         wasm_output_path = os.path.join(output_dir, f"{out_base}.{opt}.wasm")
         os.makedirs(os.path.dirname(wasm_output_path), exist_ok=True)
         wasm_compile_cmd = f"{wasi_clang_path} {program} -w -o {wasm_output_path} -O{opt}"
         wasm_status, wasm_output = subprocess.getstatusoutput(wasm_compile_cmd)
-        results.append((program, f".{opt}.wasm", wasm_compile_cmd, wasm_status, wasm_output))
+        results.append((relative_path, f".{opt}.wasm", wasm_compile_cmd, wasm_status, wasm_output))
 
         wat_output_path = os.path.join(output_dir, f"{out_base}.{opt}.wat")
         if wasm_status == 0:
@@ -134,7 +134,7 @@ def compile_programs_parallel(program_list_path=None, max_workers=None, result_f
 
     with open(result_file, "w", newline="", encoding="utf-8") as csvfile:
         writer = csv.writer(csvfile)
-        writer.writerow(["Program"] + targets)
+        writer.writerow(["file"] + targets)
 
         program_to_messages = {}
         for program, target, _, _, message in results:
