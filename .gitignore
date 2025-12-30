@@ -4,4 +4,9 @@
 POJ104/Program/**
 !POJ104/Program/**/*.txt
 
-program_c/
+POJ104/program_c/
+POJ104/program_out/
+POJ104/program_translated/
+POJ104/poj104_compile_stats.csv
+POJ104/poj104_src_stats.csv
+POJ104/poj104_translate_stats.csv
