@@ -31,6 +31,8 @@ for home, dirs, files in os.walk(rootdir):
             code = code.replace("char main", "int main")
             code = code.replace("main()", "int main()")
             code = code.replace("int int main()", "int main()")
+            # Replace deprecated gets with a scanf variant to keep builds C99-friendly.
+            code = code.replace("gets(", "scanf(\"%s\", ")
 
             cf.write(code)
             # ccf.write(code)
